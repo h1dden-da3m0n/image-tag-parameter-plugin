@@ -1,18 +1,12 @@
 package io.jenkins.plugins.luxair.logic;
 
 import hudson.util.VersionNumber;
-import io.jenkins.plugins.luxair.model.AuthService;
-import io.jenkins.plugins.luxair.model.AuthType;
-import io.jenkins.plugins.luxair.model.ErrorInterceptor;
-import io.jenkins.plugins.luxair.model.ImageTag;
+import io.jenkins.plugins.luxair.model.*;
 import kong.unirest.*;
 import kong.unirest.json.JSONObject;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,23 +22,51 @@ public class ImageTagService {
         throw new IllegalStateException("Utility class");
     }
 
-    public static List<ImageTag> getTags(String image, String registry, String filter,
-                                         String user, String password, boolean reverseOrdering) {
-        AuthService authService = getAuthService(registry);
-        if (authService.getAuthType() != AuthType.UNKNOWN) {
-            String token = getAuthToken(authService, image, user, password);
-            List<VersionNumber> tags = getImageTagsFromRegistry(image, registry, authService.getAuthType(), token);
-            return tags.stream().filter(tag -> tag.toString().matches(filter))
-                .sorted(!reverseOrdering ? VersionNumber.DESCENDING : VersionNumber::compareTo)
-                .map(it -> new ImageTag(image, it.toString()))
-                .collect(Collectors.toList());
+    public static ErrorContainer<List<ImageTag>> getTags(String image, String registry, String filter,
+                                                         String user, String password, boolean reverseOrdering) {
+        ErrorContainer<List<ImageTag>> container = new ErrorContainer<>(null);
+
+        ErrorContainer<AuthService> authService = getAuthService(registry);
+        Optional<String> authServiceError = authService.getErrorMsg();
+        if (authServiceError.isPresent()) {
+            container.setErrorMsg(authServiceError.get());
+            container.setValue(Collections.emptyList());
+            return container;
         } else {
-            return Collections.emptyList();
+            AuthService service = authService.getValue();
+            ErrorContainer<String> token = getAuthToken(service, image, user, password);
+            Optional<String> tokenError = token.getErrorMsg();
+            if (tokenError.isPresent()) {
+                container.setErrorMsg(tokenError.get());
+                container.setValue(Collections.emptyList());
+                return container;
+            }
+
+            ErrorContainer<List<VersionNumber>> tags = getImageTagsFromRegistry(image, registry, service.getAuthType(), token.getValue());
+            Optional<String> tagsError = tags.getErrorMsg();
+            if (tagsError.isPresent()) {
+                container.setErrorMsg(tagsError.get());
+                container.setValue(Collections.emptyList());
+                return container;
+            }
+
+            return filterTags(image, tags.getValue(), filter, reverseOrdering);
         }
     }
 
-    private static AuthService getAuthService(String registry) {
-        AuthService authService = new AuthService(AuthType.UNKNOWN);
+    private static ErrorContainer<List<ImageTag>> filterTags(String image, List<VersionNumber> tags,
+                                                             String filter, boolean reverseOrdering) {
+        List<ImageTag> ret = tags.stream()
+            .filter(tag -> tag.toString().matches(filter))
+            .sorted(reverseOrdering ? VersionNumber::compareTo : VersionNumber.DESCENDING)
+            .map(it -> new ImageTag(image, it.toString()))
+            .collect(Collectors.toList());
+
+        return new ErrorContainer<>(ret);
+    }
+
+    private static ErrorContainer<AuthService> getAuthService(String registry) {
+        ErrorContainer<AuthService> container = new ErrorContainer<>(new AuthService(AuthType.UNKNOWN));
         String url = registry + "/v2/";
         String type = "";
 
@@ -61,46 +83,52 @@ public class ImageTagService {
         }
 
         if (type.equals(AuthType.BASIC.value)) {
-            authService.setAuthType(AuthType.BASIC);
+            container.getValue().setAuthType(AuthType.BASIC);
             logger.fine("AuthService: type=Basic");
         } else if (type.equals(AuthType.BEARER.value)) {
             String pattern = "Bearer realm=\"(\\S+)\",service=\"(\\S+)\"";
             Matcher m = Pattern.compile(pattern).matcher(headerValue);
             if (m.find()) {
-                authService.setAuthType(AuthType.BEARER);
-                authService.setRealm(m.group(1));
-                authService.setService(m.group(2));
+                container.getValue().setAuthType(AuthType.BEARER);
+                container.getValue().setRealm(m.group(1));
+                container.getValue().setService(m.group(2));
                 logger.fine("AuthService: type=Bearer, realm=" + m.group(1) + ", service=" + m.group(2));
             } else {
                 logger.warning("No AuthService available from " + url);
             }
         } else {
+            container.setErrorMsg("Unknown authorization type! Received type: " + type);
             logger.warning("Unknown authorization type! Received type: " + type);
         }
 
-        return authService;
+        return container;
     }
 
-    private static String getAuthToken(AuthService authService, String image, String user, String password) {
-        String token = "";
+    private static ErrorContainer<String> getAuthToken(AuthService authService, String image,
+                                                       String user, String password) {
+        ErrorContainer<String> container = new ErrorContainer<>("");
 
         switch (authService.getAuthType()) {
             case BASIC:
-                token = Base64.getEncoder().encodeToString((user + ":" + password).getBytes(StandardCharsets.UTF_8));
+                container.setValue(Base64.getEncoder()
+                    .encodeToString((user + ":" + password).getBytes(StandardCharsets.UTF_8)));
                 break;
             case BEARER:
-                token = getBearerAuthToken(authService, image, user, password);
+                ErrorContainer<String> bearer = getBearerAuthToken(authService, image, user, password);
+                bearer.getErrorMsg().ifPresent(container::setErrorMsg);
+                container.setValue(bearer.getValue());
                 break;
             default:
+                container.setErrorMsg("AuthServiceType is unknown. Unable to fetch AuthToken.");
                 logger.warning("AuthServiceType is unknown. Unable to fetch AuthToken.");
         }
 
-        return token;
+        return container;
     }
 
-    private static String getBearerAuthToken(AuthService authService, String image,
-                                             String user, String password) {
-        String token = "";
+    private static ErrorContainer<String> getBearerAuthToken(AuthService authService, String image,
+                                                             String user, String password) {
+        ErrorContainer<String> container = new ErrorContainer<>("");
 
         Unirest.config().reset();
         Unirest.config().enableCookieManagement(false).interceptor(errorInterceptor);
@@ -114,32 +142,38 @@ public class ImageTagService {
             .queryString("scope", "repository:" + image + ":pull")
             .asJson();
         if (response.isSuccess()) {
-            token = findTokenInResponse(response, "token", "access_token");
+            ErrorContainer<String> token = findTokenInResponse(response, "token", "access_token");
+            token.getErrorMsg().ifPresent(container::setErrorMsg);
+            container.setValue(token.getValue());
         } else {
+            container.setErrorMsg("Request failed! Token was not received");
             logger.warning("Request failed! Token was not received");
         }
         Unirest.shutDown();
 
-        return token;
+        return container;
     }
 
-    private static String findTokenInResponse(HttpResponse<JsonNode> response, String... searchKey) {
+    private static ErrorContainer<String> findTokenInResponse(HttpResponse<JsonNode> response, String... searchKey) {
+        ErrorContainer<String> container = new ErrorContainer<>("");
         JSONObject jsonObj = response.getBody().getObject();
 
         for (String key : searchKey) {
             if (jsonObj.has(key)) {
                 logger.fine("Token received");
-                return jsonObj.getString(key);
+                container.setValue(jsonObj.getString(key));
+                return container;
             }
         }
 
+        container.setErrorMsg("Unable to find token in response! Token was not received");
         logger.warning("Unable to find token in response! Token was not received");
-        return "";
+        return container;
     }
 
-    private static List<VersionNumber> getImageTagsFromRegistry(String image, String registry,
-                                                                AuthType authType, String token) {
-        List<VersionNumber> tags = new ArrayList<>();
+    private static ErrorContainer<List<VersionNumber>> getImageTagsFromRegistry(String image, String registry,
+                                                                                AuthType authType, String token) {
+        ErrorContainer<List<VersionNumber>> container = new ErrorContainer<>(new ArrayList<>());
         String url = registry + "/v2/{image}/tags/list";
 
         Unirest.config().reset();
@@ -152,12 +186,13 @@ public class ImageTagService {
             logger.fine("HTTP status: " + response.getStatusText());
             response.getBody().getObject()
                 .getJSONArray("tags")
-                .forEach(item -> tags.add(new VersionNumber(item.toString())));
+                .forEach(item -> container.getValue().add(new VersionNumber(item.toString())));
         } else {
+            container.setErrorMsg("Image tags request responded with HTTP status: " + response.getStatusText());
             logger.warning("Image tags request responded with HTTP status: " + response.getStatusText());
         }
 
         Unirest.shutDown();
-        return tags;
+        return container;
     }
 }

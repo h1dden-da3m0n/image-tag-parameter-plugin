@@ -12,6 +12,7 @@ import hudson.model.SimpleParameterDefinition;
 import hudson.security.ACL;
 import hudson.util.ListBoxModel;
 import io.jenkins.plugins.luxair.logic.ImageTagService;
+import io.jenkins.plugins.luxair.model.ErrorContainer;
 import io.jenkins.plugins.luxair.model.ImageTag;
 import io.jenkins.plugins.luxair.util.StringUtil;
 import jenkins.model.Jenkins;
@@ -40,6 +41,7 @@ public class ImageTagParameterDefinition extends SimpleParameterDefinition {
     private final String defaultTag;
     private final String credentialId;
     private final boolean reverseOrder;
+    private String errorMsg = "";
 
     @DataBoundConstructor
     public ImageTagParameterDefinition(String name, String description, String image, String filter, String defaultTag,
@@ -87,8 +89,15 @@ public class ImageTagParameterDefinition extends SimpleParameterDefinition {
         return reverseOrder;
     }
 
+    public String getErrorMsg() {
+        return errorMsg;
+    }
+
+    public void setErrorMsg(String errorMsg) {
+        this.errorMsg = errorMsg;
+    }
+
     public List<ImageTag> getTags() {
-        List<ImageTag> imageTags;
         String user = "";
         String password = "";
 
@@ -97,8 +106,10 @@ public class ImageTagParameterDefinition extends SimpleParameterDefinition {
             user = credential.getUsername();
             password = credential.getPassword().getPlainText();
         }
-        imageTags = ImageTagService.getTags(image, registry, filter, user, password, reverseOrder);
-        return imageTags;
+
+        ErrorContainer<List<ImageTag>> imageTags = ImageTagService.getTags(image, registry, filter, user, password, reverseOrder);
+        imageTags.getErrorMsg().ifPresent(this::setErrorMsg);
+        return imageTags.getValue();
     }
 
     private StandardUsernamePasswordCredentials findCredential(String credentialId) {

@@ -20,6 +20,9 @@
             </select>
 
         </div>
+        <div name="errorMsg" display="${it.errorMsg == '' ? 'none' : ''}" style="color: red">
+            ${it.errorMsg}
+        </div>
     </f:entry>
 
 </j:jelly>
