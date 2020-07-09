@@ -1,4 +1,4 @@
-package io.jenkins.plugins.luxair.util;
+package io.jenkins.plugins.luxair.model;
 
 public enum AuthType {
     BASIC("Basic"),

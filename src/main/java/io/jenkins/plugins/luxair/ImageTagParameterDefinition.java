@@ -11,6 +11,8 @@ import hudson.model.ParameterValue;
 import hudson.model.SimpleParameterDefinition;
 import hudson.security.ACL;
 import hudson.util.ListBoxModel;
+import io.jenkins.plugins.luxair.logic.ImageTagService;
+import io.jenkins.plugins.luxair.model.ImageTag;
 import io.jenkins.plugins.luxair.util.StringUtil;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
@@ -85,8 +87,8 @@ public class ImageTagParameterDefinition extends SimpleParameterDefinition {
         return reverseOrder;
     }
 
-    public List<String> getTags() {
-        List<String> imageTags;
+    public List<ImageTag> getTags() {
+        List<ImageTag> imageTags;
         String user = "";
         String password = "";
 
@@ -95,7 +97,7 @@ public class ImageTagParameterDefinition extends SimpleParameterDefinition {
             user = credential.getUsername();
             password = credential.getPassword().getPlainText();
         }
-        imageTags = ImageTag.getTags(image, registry, filter, user, password, reverseOrder);
+        imageTags = ImageTagService.getTags(image, registry, filter, user, password, reverseOrder);
         return imageTags;
     }
 
@@ -116,7 +118,7 @@ public class ImageTagParameterDefinition extends SimpleParameterDefinition {
             }
             logger.warning("Cannot find credential for :" + credentialId + ":");
         } else {
-            logger.fine("CredentialId is empty");
+            logger.info("CredentialId is empty");
         }
         return null;
     }

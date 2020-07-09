@@ -1,8 +1,10 @@
-package io.jenkins.plugins.luxair;
+package io.jenkins.plugins.luxair.logic;
 
 import hudson.util.VersionNumber;
-import io.jenkins.plugins.luxair.util.AuthService;
-import io.jenkins.plugins.luxair.util.AuthType;
+import io.jenkins.plugins.luxair.model.AuthService;
+import io.jenkins.plugins.luxair.model.AuthType;
+import io.jenkins.plugins.luxair.model.ErrorInterceptor;
+import io.jenkins.plugins.luxair.model.ImageTag;
 import kong.unirest.*;
 import kong.unirest.json.JSONObject;
 
@@ -17,24 +19,24 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 
-public class ImageTag {
+public class ImageTagService {
 
-    private static final Logger logger = Logger.getLogger(ImageTag.class.getName());
+    private static final Logger logger = Logger.getLogger(ImageTagService.class.getName());
     private static final Interceptor errorInterceptor = new ErrorInterceptor();
 
-    private ImageTag() {
+    private ImageTagService() {
         throw new IllegalStateException("Utility class");
     }
 
-    public static List<String> getTags(String image, String registry, String filter,
-                                       String user, String password, boolean reverseOrdering) {
+    public static List<ImageTag> getTags(String image, String registry, String filter,
+                                         String user, String password, boolean reverseOrdering) {
         AuthService authService = getAuthService(registry);
         if (authService.getAuthType() != AuthType.UNKNOWN) {
             String token = getAuthToken(authService, image, user, password);
             List<VersionNumber> tags = getImageTagsFromRegistry(image, registry, authService.getAuthType(), token);
             return tags.stream().filter(tag -> tag.toString().matches(filter))
                 .sorted(!reverseOrdering ? VersionNumber.DESCENDING : VersionNumber::compareTo)
-                .map(VersionNumber::toString)
+                .map(it -> new ImageTag(image, it.toString()))
                 .collect(Collectors.toList());
         } else {
             return Collections.emptyList();
@@ -44,14 +46,13 @@ public class ImageTag {
     private static AuthService getAuthService(String registry) {
         AuthService authService = new AuthService(AuthType.UNKNOWN);
         String url = registry + "/v2/";
+        String type = "";
 
         Unirest.config().reset();
         Unirest.config().enableCookieManagement(false).interceptor(errorInterceptor);
         String headerValue = Unirest.get(url).asEmpty()
             .getHeaders().getFirst("Www-Authenticate");
         Unirest.shutDown();
-
-        String type = "";
 
         String typePattern = "^(\\S+)";
         Matcher typeMatcher = Pattern.compile(typePattern).matcher(headerValue);
@@ -97,7 +98,8 @@ public class ImageTag {
         return token;
     }
 
-    private static String getBearerAuthToken(AuthService authService, String image, String user, String password) {
+    private static String getBearerAuthToken(AuthService authService, String image,
+                                             String user, String password) {
         String token = "";
 
         Unirest.config().reset();
@@ -154,8 +156,8 @@ public class ImageTag {
         } else {
             logger.warning("Image tags request responded with HTTP status: " + response.getStatusText());
         }
-        Unirest.shutDown();
 
+        Unirest.shutDown();
         return tags;
     }
 }
