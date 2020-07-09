@@ -1,16 +1,16 @@
 package io.jenkins.plugins.luxair.model;
 
 public class ImageTag {
-    private final String name;
+    private final String image;
     private final String tag;
 
-    public ImageTag(String name, String tag) {
-        this.name = name;
+    public ImageTag(String image, String tag) {
+        this.image = image;
         this.tag = tag;
     }
 
-    public String getName() {
-        return name;
+    public String getImage() {
+        return image;
     }
 
     public String getTag() {
@@ -25,7 +25,7 @@ public class ImageTag {
 
         ImageTag that = (ImageTag) obj;
 
-        return name.equals(that.name)
+        return image.equals(that.image)
             && tag.equals(that.tag);
     }
 
@@ -34,13 +34,13 @@ public class ImageTag {
         final int prime = 31;
         int result = super.hashCode();
         result = prime * result +
-            ((name == null) ? 0 : name.hashCode()) +
+            ((image == null) ? 0 : image.hashCode()) +
             ((tag == null) ? 0 : tag.hashCode());
         return result;
     }
 
     @Override
     public String toString() {
-        return name + ":" + tag;
+        return image + ":" + tag;
     }
 }
