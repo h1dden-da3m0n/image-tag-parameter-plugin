@@ -24,45 +24,40 @@ public class ImageTagService {
 
     public static ErrorContainer<List<ImageTag>> getTags(String image, String registry, String filter,
                                                          String user, String password, boolean reverseOrdering) {
-        ErrorContainer<List<ImageTag>> container = new ErrorContainer<>(null);
+        ErrorContainer<List<ImageTag>> container = new ErrorContainer<>(Collections.emptyList());
 
         ErrorContainer<AuthService> authService = getAuthService(registry);
         Optional<String> authServiceError = authService.getErrorMsg();
         if (authServiceError.isPresent()) {
             container.setErrorMsg(authServiceError.get());
-            container.setValue(Collections.emptyList());
             return container;
-        } else {
-            AuthService service = authService.getValue();
-            ErrorContainer<String> token = getAuthToken(service, image, user, password);
-            Optional<String> tokenError = token.getErrorMsg();
-            if (tokenError.isPresent()) {
-                container.setErrorMsg(tokenError.get());
-                container.setValue(Collections.emptyList());
-                return container;
-            }
-
-            ErrorContainer<List<VersionNumber>> tags = getImageTagsFromRegistry(image, registry, service.getAuthType(), token.getValue());
-            Optional<String> tagsError = tags.getErrorMsg();
-            if (tagsError.isPresent()) {
-                container.setErrorMsg(tagsError.get());
-                container.setValue(Collections.emptyList());
-                return container;
-            }
-
-            return filterTags(image, tags.getValue(), filter, reverseOrdering);
         }
+
+        ErrorContainer<String> token = getAuthToken(authService.getValue(), image, user, password);
+        Optional<String> tokenError = token.getErrorMsg();
+        if (tokenError.isPresent()) {
+            container.setErrorMsg(tokenError.get());
+            return container;
+        }
+
+        ErrorContainer<List<VersionNumber>> tags = getImageTagsFromRegistry(image, registry, authService.getValue().getAuthType(), token.getValue());
+        Optional<String> tagsError = tags.getErrorMsg();
+        if (tagsError.isPresent()) {
+            container.setErrorMsg(tagsError.get());
+            return container;
+        }
+
+        container.setValue(filterTags(image, tags.getValue(), filter, reverseOrdering));
+        return container;
     }
 
-    private static ErrorContainer<List<ImageTag>> filterTags(String image, List<VersionNumber> tags,
-                                                             String filter, boolean reverseOrdering) {
-        List<ImageTag> ret = tags.stream()
+    private static List<ImageTag> filterTags(String image, List<VersionNumber> tags,
+                                             String filter, boolean reverseOrdering) {
+        return tags.stream()
             .filter(tag -> tag.toString().matches(filter))
             .sorted(reverseOrdering ? VersionNumber::compareTo : VersionNumber.DESCENDING)
             .map(it -> new ImageTag(image, it.toString()))
             .collect(Collectors.toList());
-
-        return new ErrorContainer<>(ret);
     }
 
     private static ErrorContainer<AuthService> getAuthService(String registry) {
