@@ -23,7 +23,7 @@ public class ImageTagService {
     }
 
     public static ErrorContainer<List<ImageTag>> getTags(String image, String registry, String filter,
-                                                         String user, String password, boolean reverseOrdering) {
+                                                         String user, String password, Ordering ordering) {
         ErrorContainer<List<ImageTag>> container = new ErrorContainer<>(Collections.emptyList());
 
         ErrorContainer<AuthService> authService = getAuthService(registry);
@@ -47,17 +47,38 @@ public class ImageTagService {
             return container;
         }
 
-        container.setValue(filterTags(image, tags.getValue(), filter, reverseOrdering));
+        ErrorContainer<List<ImageTag>> filterTags = filterTags(image, tags.getValue(), filter, ordering);
+        filterTags.getErrorMsg().ifPresent(container::setErrorMsg);
+        container.setValue(filterTags.getValue());
         return container;
     }
 
-    private static List<ImageTag> filterTags(String image, List<VersionNumber> tags,
-                                             String filter, boolean reverseOrdering) {
-        return tags.stream()
-            .filter(tag -> tag.toString().matches(filter))
-            .sorted(reverseOrdering ? VersionNumber::compareTo : VersionNumber.DESCENDING)
-            .map(it -> new ImageTag(image, it.toString()))
-            .collect(Collectors.toList());
+    private static ErrorContainer<List<ImageTag>> filterTags(String image, List<VersionNumber> tags,
+                                                             String filter, Ordering ordering) {
+        ErrorContainer<List<ImageTag>> container = new ErrorContainer<>(Collections.emptyList());
+        logger.fine("Ordering Tags according to: " + ordering);
+
+        if (ordering == Ordering.NATURAL || ordering == Ordering.REV_NATURAL) {
+            container.setValue(tags.stream()
+                .map(VersionNumber::toString)
+                .filter(tag -> tag.matches(filter))
+                .sorted(ordering == Ordering.NATURAL ? Collections.reverseOrder() : String::compareTo)
+                .map(tag -> new ImageTag(image, tag))
+                .collect(Collectors.toList()));
+        } else {
+            try {
+                container.setValue(tags.stream()
+                    .filter(tag -> tag.toString().matches(filter))
+                    .sorted(ordering == Ordering.ASC_VERSION ? VersionNumber::compareTo : VersionNumber.DESCENDING)
+                    .map(tag -> new ImageTag(image, tag.toString()))
+                    .collect(Collectors.toList()));
+            } catch (Exception ignore) {
+                logger.warning("Unable to cast ImageTags to versions! Versioned Ordering is not supported for this images tags.");
+                container.setErrorMsg("Unable to cast ImageTags to versions! Versioned Ordering is not supported for this images tags.");
+            }
+        }
+
+        return container;
     }
 
     private static ErrorContainer<AuthService> getAuthService(String registry) {
