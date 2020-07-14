@@ -24,15 +24,15 @@
 
     <f:advanced>
         <f:entry title="${%Registry URL}" field="registry">
-            <f:textbox default="${descriptor.defaultRegistry()}" />
+            <f:textbox default="${descriptor.getDefaultRegistry()}" />
         </f:entry>
 
         <f:entry title="${%Registry Credential ID}" field="credentialId">
-            <c:select default="${descriptor.defaultCredentialID()}" />
+            <c:select default="${descriptor.getDefaultCredentialID()}" />
         </f:entry>
 
-        <f:entry title="${%Reverse Tag Ordering}" field="reverseOrder">
-            <f:checkbox />
+        <f:entry title="${%Tag Ordering}" field="tagOrder">
+            <f:enum default="${descriptor.getDefaultTagOrdering().name()}">${it}</f:enum>
         </f:entry>
     </f:advanced>
 

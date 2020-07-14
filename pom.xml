@@ -9,7 +9,7 @@
         <relativePath/>
     </parent>
     <artifactId>image-tag-parameter</artifactId>
-    <version>1.7-SNAPSHOT</version>
+    <version>1.8-SNAPSHOT</version>
     <packaging>hpi</packaging>
     <properties>
         <jenkins.version>2.164.3</jenkins.version>

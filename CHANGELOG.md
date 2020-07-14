@@ -1,11 +1,14 @@
 Changelog
 ===
 
-## v1.7 (tbd)
+## v1.8 (tbd)
 * change to improve ordering of tag values for parameter
 * add option to revere ordering
 * add default credential used for the default registry
 * change to move registry, credential and reverseOrder option into advanced configuration
+* fix JobDSL API breaking by requiring new optional properties for parameter creation (regression from v1.6)
+
+## v1.7 (Jul 10, 2020)
 * add support for basic authorization type (for repositories like AWS ECR and Registry (self hosted))
 
 ## v1.6 (Jun 25, 2020)

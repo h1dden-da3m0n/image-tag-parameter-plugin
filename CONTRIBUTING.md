@@ -1,3 +1,7 @@
+# Contributing Guidelines
+
+The global [Contributing Guidelines](https://github.com/jenkinsci/.github/blob/master/CONTRIBUTING.md) apply to this repo.
+
 ## how to build the Jenkins Plugin
  
 ### Install skdman

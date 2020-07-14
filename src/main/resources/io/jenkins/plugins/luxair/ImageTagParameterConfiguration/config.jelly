@@ -9,5 +9,9 @@
         <f:entry title="${%Default Registry Credential}" field="defaultCredentialId">
             <c:select />
         </f:entry>
+
+        <f:entry title="${%Default Tag Ordering}" field="defaultTagOrdering">
+            <f:enum>${it}</f:enum>
+        </f:entry>
     </f:section>
 </j:jelly>
