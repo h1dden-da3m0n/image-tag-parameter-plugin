@@ -144,9 +144,9 @@ public class ImageTagParameterDefinition extends SimpleParameterDefinition {
                     }
                 }
             }
-            logger.warning("Cannot find credential for :" + credentialId + ":");
+            logger.warning(Messages.ImageTagParameterDefinition_warn_cannotFindCredentialFor(credentialId));
         } else {
-            logger.info("CredentialId is empty");
+            logger.fine(Messages.ImageTagParameterDefinition_debug_credentialIdIsEmpty());
         }
         return null;
     }
@@ -179,7 +179,7 @@ public class ImageTagParameterDefinition extends SimpleParameterDefinition {
         @Override
         @Nonnull
         public String getDisplayName() {
-            return "Image Tag Parameter";
+            return Messages.ImageTagParameterDefinition_DescriptorImpl_DisplayName();
         }
 
         @SuppressWarnings("unused")
@@ -202,7 +202,7 @@ public class ImageTagParameterDefinition extends SimpleParameterDefinition {
                                                     @QueryParameter String credentialId) {
             if (context == null && !Jenkins.get().hasPermission(Jenkins.ADMINISTER) ||
                 context != null && !context.hasPermission(Item.EXTENDED_READ)) {
-                logger.info("No permission to list credential in context: " + context);
+                logger.info(Messages.ImageTagParameterDefinition_info_noPermissionToListCredentialsInContext(context));
                 return new StandardListBoxModel().includeCurrentValue(credentialId);
             }
             return new StandardListBoxModel()

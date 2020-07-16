@@ -29,6 +29,7 @@ public class ImageTagParameterValue extends ParameterValue {
     public String value;
 
     @DataBoundConstructor
+    @SuppressWarnings("unused")
     public ImageTagParameterValue(String name, String imageName, String imageTag) {
         this(name, imageName, imageTag, null);
     }

@@ -50,15 +50,15 @@ public class ImageTagParameterConfiguration extends GlobalConfiguration {
     public boolean configure(StaplerRequest req, JSONObject json) {
         if (json.has("defaultRegistry")) {
             this.defaultRegistry = json.getString("defaultRegistry");
-            logger.fine("Changed default registry to: " + defaultRegistry);
+            logger.fine(Messages.ImageTagParameterConfiguration_debug_changedDefaultRegistryTo(defaultRegistry));
         }
         if (json.has("defaultCredentialId")) {
             this.defaultRegistry = json.getString("defaultCredentialId");
-            logger.fine("Changed default registry credentialsId to: " + defaultCredentialId);
+            logger.fine(Messages.ImageTagParameterConfiguration_debug_changedDefaultRegistryCredentialIdTo(defaultCredentialId));
         }
         if (json.has("defaultTagOrdering")) {
             this.defaultTagOrdering = Ordering.valueOf(json.getString("defaultTagOrdering"));
-            logger.fine("Changed default tag ordering to: " + defaultTagOrdering);
+            logger.fine(Messages.ImageTagParameterConfiguration_debug_changedDefaultTagOrderingTo(defaultTagOrdering));
         }
         save();
         return true;
@@ -67,31 +67,31 @@ public class ImageTagParameterConfiguration extends GlobalConfiguration {
     @DataBoundSetter
     @SuppressWarnings("unused")
     public void setDefaultRegistry(String defaultRegistry) {
-        logger.info("Changing default registry to: " + defaultRegistry);
         this.defaultRegistry = defaultRegistry;
+        logger.fine(Messages.ImageTagParameterConfiguration_debug_changedDefaultRegistryTo(defaultRegistry));
         save();
     }
 
     @DataBoundSetter
     @SuppressWarnings("unused")
     public void setDefaultCredentialId(String defaultCredentialId) {
-        logger.info("Changing default registry credentialsId to: " + defaultCredentialId);
         this.defaultCredentialId = defaultCredentialId;
+        logger.fine(Messages.ImageTagParameterConfiguration_debug_changedDefaultRegistryCredentialIdTo(defaultCredentialId));
         save();
     }
 
     @DataBoundSetter
     @SuppressWarnings("unused")
     public void setDefaultTagOrdering(Ordering defaultTagOrdering) {
-        logger.info("Changing default tag ordering to: " + defaultTagOrdering);
         this.defaultTagOrdering = defaultTagOrdering;
+        logger.fine(Messages.ImageTagParameterConfiguration_debug_changedDefaultTagOrderingTo(defaultTagOrdering));
         save();
     }
 
     @SuppressWarnings("unused")
     public ListBoxModel doFillDefaultCredentialIdItems(@QueryParameter String credentialsId) {
         if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
-            logger.info("No permission to list credential");
+            logger.info(Messages.ImageTagParameterConfiguration_info_noPermissionToListCredentials());
             return new StandardListBoxModel().includeCurrentValue(defaultCredentialId);
         }
         return new StandardListBoxModel()

@@ -56,7 +56,7 @@ public class ImageTagService {
     private static ErrorContainer<List<ImageTag>> filterTags(String image, List<VersionNumber> tags,
                                                              String filter, Ordering ordering) {
         ErrorContainer<List<ImageTag>> container = new ErrorContainer<>(Collections.emptyList());
-        logger.fine("Ordering Tags according to: " + ordering);
+        logger.fine(Messages.ImageTagService_debug_orderingTagsAccordingTo(ordering));
 
         if (ordering == Ordering.NATURAL || ordering == Ordering.REV_NATURAL) {
             container.setValue(tags.stream()
@@ -73,8 +73,8 @@ public class ImageTagService {
                     .map(tag -> new ImageTag(image, tag.toString()))
                     .collect(Collectors.toList()));
             } catch (Exception ignore) {
-                logger.warning("Unable to cast ImageTags to versions! Versioned Ordering is not supported for this images tags.");
-                container.setErrorMsg("Unable to cast ImageTags to versions! Versioned Ordering is not supported for this images tags.");
+                logger.warning(Messages.ImageTagService_warn_unableToCastImageTagsToVersions());
+                container.setErrorMsg(Messages.ImageTagService_warn_unableToCastImageTagsToVersions());
             }
         }
 
@@ -110,11 +110,12 @@ public class ImageTagService {
                 container.getValue().setService(m.group(2));
                 logger.fine("AuthService: type=Bearer, realm=" + m.group(1) + ", service=" + m.group(2));
             } else {
-                logger.warning("No AuthService available from " + url);
+                container.setErrorMsg(Messages.ImageTagService_warn_noAuthServiceAvailableFrom(url));
+                logger.warning(Messages.ImageTagService_warn_noAuthServiceAvailableFrom(url));
             }
         } else {
-            container.setErrorMsg("Unknown authorization type! Received type: " + type);
-            logger.warning("Unknown authorization type! Received type: " + type);
+            container.setErrorMsg(Messages.ImageTagService_warn_unknownAuthorizationReceived(type));
+            logger.warning(Messages.ImageTagService_warn_unknownAuthorizationReceived(type));
         }
 
         return container;
@@ -135,8 +136,8 @@ public class ImageTagService {
                 container.setValue(bearer.getValue());
                 break;
             default:
-                container.setErrorMsg("AuthServiceType is unknown. Unable to fetch AuthToken.");
-                logger.warning("AuthServiceType is unknown. Unable to fetch AuthToken.");
+                container.setErrorMsg(Messages.ImageTagService_warn_authServiceTypeIsUnknown());
+                logger.warning(Messages.ImageTagService_warn_authServiceTypeIsUnknown());
         }
 
         return container;
@@ -150,7 +151,7 @@ public class ImageTagService {
         Unirest.config().enableCookieManagement(false).interceptor(errorInterceptor);
         GetRequest request = Unirest.get(authService.getRealm());
         if (!user.isEmpty() && !password.isEmpty()) {
-            logger.fine("Using Basic authentication to fetch AuthToken");
+            logger.fine(Messages.ImageTagService_debug_usingBasicAuthenticationToFetchAuthToken());
             request = request.basicAuth(user, password);
         }
         HttpResponse<JsonNode> response = request
@@ -162,8 +163,8 @@ public class ImageTagService {
             token.getErrorMsg().ifPresent(container::setErrorMsg);
             container.setValue(token.getValue());
         } else {
-            container.setErrorMsg("Request failed! Token was not received");
-            logger.warning("Request failed! Token was not received");
+            container.setErrorMsg(Messages.ImageTagService_warn_requestFailedNoTokenReceived());
+            logger.warning(Messages.ImageTagService_warn_requestFailedNoTokenReceived());
         }
         Unirest.shutDown();
 
@@ -176,14 +177,14 @@ public class ImageTagService {
 
         for (String key : searchKey) {
             if (jsonObj.has(key)) {
-                logger.fine("Token received");
+                logger.fine(Messages.ImageTagService_debug_foundTokenInResponse());
                 container.setValue(jsonObj.getString(key));
                 return container;
             }
         }
 
-        container.setErrorMsg("Unable to find token in response! Token was not received");
-        logger.warning("Unable to find token in response! Token was not received");
+        container.setErrorMsg(Messages.ImageTagService_warn_unableToFindTokenInResponse());
+        logger.warning(Messages.ImageTagService_warn_unableToFindTokenInResponse());
         return container;
     }
 
@@ -199,13 +200,13 @@ public class ImageTagService {
             .routeParam("image", image)
             .asJson();
         if (response.isSuccess()) {
-            logger.fine("HTTP status: " + response.getStatusText());
+            logger.fine(Messages.ImageTagService_debug_imageTagRequestSucceededWithStatus(response.getStatus(), response.getStatusText()));
             response.getBody().getObject()
                 .getJSONArray("tags")
                 .forEach(item -> container.getValue().add(new VersionNumber(item.toString())));
         } else {
-            container.setErrorMsg("Image tags request responded with HTTP status: " + response.getStatusText());
-            logger.warning("Image tags request responded with HTTP status: " + response.getStatusText());
+            container.setErrorMsg(Messages.ImageTagService_warn_imageTagRequestFailedWithStatus(response.getStatus(), response.getStatusText()));
+            logger.warning(Messages.ImageTagService_warn_imageTagRequestFailedWithStatus(response.getStatus(), response.getStatusText()));
         }
 
         Unirest.shutDown();

@@ -2,15 +2,15 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form" xmlns:c="/lib/credentials">
     <f:section title="${%Image Tag Parameter Plugin}">
-        <f:entry title="${%Default Registry}" field="defaultRegistry">
+        <f:entry title="${%globalConfig.defaultRegistry}" field="defaultRegistry">
             <f:textbox />
         </f:entry>
 
-        <f:entry title="${%Default Registry Credential}" field="defaultCredentialId">
+        <f:entry title="${%globalConfig.defaultRegistryCredential}" field="defaultCredentialId">
             <c:select />
         </f:entry>
 
-        <f:entry title="${%Default Tag Ordering}" field="defaultTagOrdering">
+        <f:entry title="${%globalConfig.defaultTagOrdering}" field="defaultTagOrdering">
             <f:enum>${it}</f:enum>
         </f:entry>
     </f:section>
