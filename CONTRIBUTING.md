@@ -1,26 +1,83 @@
+**Table of Content**
+1. [Contributing Guidelines](#contributing-guidelines)
+2. [How to build this Plugin](#how-to-build-this-plugin)
+3. [How to translate the plugin](#how-to-translate-the-plugin)
+
 # Contributing Guidelines
 
 The global [Contributing Guidelines](https://github.com/jenkinsci/.github/blob/master/CONTRIBUTING.md) apply to this repo.
 
-## how to build the Jenkins Plugin
- 
-### Install skdman
-```
+# How to build this Plugin
+
+1. Install JDK & MVN
+    1. [Option 1 (Linux)](#install-jdk--mvn-option-1-linux)
+        1. [(on ubuntu) install fontconfig](#on-ubuntu-install-fontconfig)
+    2. [Option 2 (Linux & MacOS)](#install-jdk--mvn-option-2-linux--macos)
+        1. [(on ubuntu) install fontconfig](#on-ubuntu-install-fontconfig)
+    3. [Option 3 (Windows)](#install-jdk--mvn-option-3-windows)
+2. [test, build and package](#test-build-and-package)
+3. [access the dev environment](#access-the-dev-environment)
+4. [Publish to Jenkins plugin repo](#publish-to-jenkins-plugin-repo)
+
+## Install JDK & MVN Option 1 (Linux):
+
+### 1. Install skdman
+```shell script
 sudo apt install zip
 curl -s "https://get.sdkman.io" | bash
 source .sdkman/bin/sdkman-init.sh 
 ```
 
-### install JDK and Maven
-```
+### 2. install JDK and Maven
+```shell script
 sdk install java 8.0.232-open
 javac -version
 sdk install maven
 mvn -version
 ```
 
-### install fontconfig on ubuntu
+**[(on ubuntu) 3. install fontconfig](#on-ubuntu-install-fontconfig)**
+
+## Install JDK & MVN Option 2 (Linux & MacOS):
+
+### Via the package manager of your System (Linux)
+
++ ***apt***
+```shell script
+sudo apt-get update
+# if you want to use openjdk 8
+sudo apt-get install openjdk-8-jdk maven
+# or if you want to use openjdk 11
+sudo apt-get install openjdk-11-jdk maven
 ```
+[(on ubuntu) install fontconfig](#on-ubuntu-install-fontconfig)
+
++ ***yum or dnf***
+```shell script
+# if you want to use openjdk 8
+sudo yum install java-1.8.0-openjdk maven
+# or if you want to use openjdk 11
+sudo yum install java-11-openjdk maven
+```
+
++ ***pacman***
+```shell script
+sudo pacman -Suyy
+# if you want to use openjdk 8
+sudo pacman -S jdk8-openjdk maven
+# or if you want to use openjdk 11
+sudo pacman -S jdk11-openjdk maven
+```
+
+*Note:* These are only some popular package managers as an example.
+If yours isn't listed, or you are not sure which one your system uses, then [Option 1](#install-jdk--mvn-option-1-linux) may be
+a better choice for you.
+
+### Via homebrew (MacOS)
+
+
+## (on ubuntu) install fontconfig
+```shell script
 sudo apt install -y fontconfig
 ```
 Error without fontconfig
@@ -30,19 +87,40 @@ Caused by: java.lang.NullPointerException
         at sun.awt.FontConfiguration.readFontConfigFile(FontConfiguration.java:219)
 ```
 
-### test, build and package
-```
+## Install JDK & MVN Option 3 (Windows)
+
+### Install OpenJDK
+Download the OpenJDK version of your choice: 
+
++ [OpenJDK 8](https://jdk.java.net/java-se-ri/8-MR3)
++ [OpenJDK 11 LTS](https://jdk.java.net/java-se-ri/11)
+
+Then follow these [instructions](https://stackoverflow.com/a/52531093) that StackOverflow user *Lior Bar-On* was so kind to
+provide for jdk-11, but these work fine for jdk-8 too.
+
+OR:
+
+Download the msi installer for your desired version from [AdoptOpenJDK](https://adoptopenjdk.net/) and install it.
+
+### Install Maven
+Download the current [Maven](http://maven.apache.org/download.cgi) zip and follow these [instructions](http://maven.apache.org/install.html)
+to install it.
+
+---
+
+## test, build and package
+```shell script
 mvn verify
 mvn hpi:run
 mvn package
 ```
 Plugin **./target/Image_Tag_Parameter.hpi** can be installed on any jenkins instance
 
-### access the dev environment
+## access the dev environment
 Point the url to http://localhost:8080/jenkins
 
-### Publish to Jenkins plugin repo
+## Publish to Jenkins plugin repo
 see https://wiki.jenkins.io/display/JENKINS/Hosting+Plugins#HostingPlugins-Releasingtojenkins-ci.org (.m2/settings.xml and ssh keys)
-```
+```shell script
 mvn release:prepare release:perform
 ```
