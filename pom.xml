@@ -14,11 +14,6 @@
     <version>1.8-SNAPSHOT</version>
     <packaging>hpi</packaging>
 
-    <properties>
-        <jenkins.version>2.164.3</jenkins.version>
-        <java.level>8</java.level>
-    </properties>
-
     <licenses>
         <license>
             <name>MIT License</name>
@@ -34,6 +29,23 @@
     </developers>
     <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
 
+    <properties>
+        <jenkins.version>2.176.1</jenkins.version>
+        <java.level>8</java.level>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.jenkins.tools.bom</groupId>
+                <artifactId>bom-2.176.x</artifactId>
+                <version>11</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
         <dependency>
             <groupId>com.konghq</groupId>
@@ -43,7 +55,6 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>credentials</artifactId>
-            <version>2.3.0</version>
         </dependency>
     </dependencies>
 
