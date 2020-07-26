@@ -22,40 +22,40 @@ public class ImageTagService {
         throw new IllegalStateException("Utility class");
     }
 
-    public static ErrorContainer<List<ImageTag>> getTags(String image, String registry, String filter,
-                                                         String user, String password, Ordering ordering) {
-        ErrorContainer<List<ImageTag>> container = new ErrorContainer<>(Collections.emptyList());
+    public static ResultContainer<List<ImageTag>> getTags(String image, String registry, String filter,
+                                                          String user, String password, Ordering ordering) {
+        ResultContainer<List<ImageTag>> container = new ResultContainer<>(Collections.emptyList());
 
-        ErrorContainer<AuthService> authService = getAuthService(registry);
+        ResultContainer<AuthService> authService = getAuthService(registry);
         Optional<String> authServiceError = authService.getErrorMsg();
         if (authServiceError.isPresent()) {
             container.setErrorMsg(authServiceError.get());
             return container;
         }
 
-        ErrorContainer<String> token = getAuthToken(authService.getValue(), image, user, password);
+        ResultContainer<String> token = getAuthToken(authService.getValue(), image, user, password);
         Optional<String> tokenError = token.getErrorMsg();
         if (tokenError.isPresent()) {
             container.setErrorMsg(tokenError.get());
             return container;
         }
 
-        ErrorContainer<List<VersionNumber>> tags = getImageTagsFromRegistry(image, registry, authService.getValue().getAuthType(), token.getValue());
+        ResultContainer<List<VersionNumber>> tags = getImageTagsFromRegistry(image, registry, authService.getValue().getAuthType(), token.getValue());
         Optional<String> tagsError = tags.getErrorMsg();
         if (tagsError.isPresent()) {
             container.setErrorMsg(tagsError.get());
             return container;
         }
 
-        ErrorContainer<List<ImageTag>> filterTags = filterTags(image, tags.getValue(), filter, ordering);
+        ResultContainer<List<ImageTag>> filterTags = filterTags(image, tags.getValue(), filter, ordering);
         filterTags.getErrorMsg().ifPresent(container::setErrorMsg);
         container.setValue(filterTags.getValue());
         return container;
     }
 
-    private static ErrorContainer<List<ImageTag>> filterTags(String image, List<VersionNumber> tags,
-                                                             String filter, Ordering ordering) {
-        ErrorContainer<List<ImageTag>> container = new ErrorContainer<>(Collections.emptyList());
+    private static ResultContainer<List<ImageTag>> filterTags(String image, List<VersionNumber> tags,
+                                                              String filter, Ordering ordering) {
+        ResultContainer<List<ImageTag>> container = new ResultContainer<>(Collections.emptyList());
         logger.fine(Messages.ImageTagService_debug_orderingTagsAccordingTo(ordering));
 
         if (ordering == Ordering.NATURAL || ordering == Ordering.REV_NATURAL) {
@@ -81,8 +81,8 @@ public class ImageTagService {
         return container;
     }
 
-    private static ErrorContainer<AuthService> getAuthService(String registry) {
-        ErrorContainer<AuthService> container = new ErrorContainer<>(new AuthService(AuthType.UNKNOWN));
+    private static ResultContainer<AuthService> getAuthService(String registry) {
+        ResultContainer<AuthService> container = new ResultContainer<>(new AuthService(AuthType.UNKNOWN));
         String url = registry + "/v2/";
         String type = "";
 
@@ -121,9 +121,9 @@ public class ImageTagService {
         return container;
     }
 
-    private static ErrorContainer<String> getAuthToken(AuthService authService, String image,
-                                                       String user, String password) {
-        ErrorContainer<String> container = new ErrorContainer<>("");
+    private static ResultContainer<String> getAuthToken(AuthService authService, String image,
+                                                        String user, String password) {
+        ResultContainer<String> container = new ResultContainer<>("");
 
         switch (authService.getAuthType()) {
             case BASIC:
@@ -131,7 +131,7 @@ public class ImageTagService {
                     .encodeToString((user + ":" + password).getBytes(StandardCharsets.UTF_8)));
                 break;
             case BEARER:
-                ErrorContainer<String> bearer = getBearerAuthToken(authService, image, user, password);
+                ResultContainer<String> bearer = getBearerAuthToken(authService, image, user, password);
                 bearer.getErrorMsg().ifPresent(container::setErrorMsg);
                 container.setValue(bearer.getValue());
                 break;
@@ -143,9 +143,9 @@ public class ImageTagService {
         return container;
     }
 
-    private static ErrorContainer<String> getBearerAuthToken(AuthService authService, String image,
-                                                             String user, String password) {
-        ErrorContainer<String> container = new ErrorContainer<>("");
+    private static ResultContainer<String> getBearerAuthToken(AuthService authService, String image,
+                                                              String user, String password) {
+        ResultContainer<String> container = new ResultContainer<>("");
 
         Unirest.config().reset();
         Unirest.config().enableCookieManagement(false).interceptor(errorInterceptor);
@@ -159,7 +159,7 @@ public class ImageTagService {
             .queryString("scope", "repository:" + image + ":pull")
             .asJson();
         if (response.isSuccess()) {
-            ErrorContainer<String> token = findTokenInResponse(response, "token", "access_token");
+            ResultContainer<String> token = findTokenInResponse(response, "token", "access_token");
             token.getErrorMsg().ifPresent(container::setErrorMsg);
             container.setValue(token.getValue());
         } else {
@@ -171,8 +171,8 @@ public class ImageTagService {
         return container;
     }
 
-    private static ErrorContainer<String> findTokenInResponse(HttpResponse<JsonNode> response, String... searchKey) {
-        ErrorContainer<String> container = new ErrorContainer<>("");
+    private static ResultContainer<String> findTokenInResponse(HttpResponse<JsonNode> response, String... searchKey) {
+        ResultContainer<String> container = new ResultContainer<>("");
         JSONObject jsonObj = response.getBody().getObject();
 
         for (String key : searchKey) {
@@ -188,9 +188,9 @@ public class ImageTagService {
         return container;
     }
 
-    private static ErrorContainer<List<VersionNumber>> getImageTagsFromRegistry(String image, String registry,
-                                                                                AuthType authType, String token) {
-        ErrorContainer<List<VersionNumber>> container = new ErrorContainer<>(new ArrayList<>());
+    private static ResultContainer<List<VersionNumber>> getImageTagsFromRegistry(String image, String registry,
+                                                                                 AuthType authType, String token) {
+        ResultContainer<List<VersionNumber>> container = new ResultContainer<>(new ArrayList<>());
         String url = registry + "/v2/{image}/tags/list";
 
         Unirest.config().reset();

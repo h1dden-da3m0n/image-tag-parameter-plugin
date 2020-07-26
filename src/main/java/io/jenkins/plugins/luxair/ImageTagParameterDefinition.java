@@ -12,9 +12,9 @@ import hudson.model.SimpleParameterDefinition;
 import hudson.security.ACL;
 import hudson.util.ListBoxModel;
 import io.jenkins.plugins.luxair.logic.ImageTagService;
-import io.jenkins.plugins.luxair.model.ErrorContainer;
 import io.jenkins.plugins.luxair.model.ImageTag;
 import io.jenkins.plugins.luxair.model.Ordering;
+import io.jenkins.plugins.luxair.model.ResultContainer;
 import io.jenkins.plugins.luxair.util.StringUtil;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
@@ -123,7 +123,7 @@ public class ImageTagParameterDefinition extends SimpleParameterDefinition {
             password = credential.getPassword().getPlainText();
         }
 
-        ErrorContainer<List<ImageTag>> imageTags = ImageTagService.getTags(image, registry, filter, user, password, tagOrder);
+        ResultContainer<List<ImageTag>> imageTags = ImageTagService.getTags(image, registry, filter, user, password, tagOrder);
         imageTags.getErrorMsg().ifPresent(this::setErrorMsg);
 
         return imageTags.getValue();

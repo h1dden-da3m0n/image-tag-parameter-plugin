@@ -7,11 +7,11 @@ import java.util.Optional;
  *
  * @param <V> The type of the to capsule value if there is no error
  */
-public class ErrorContainer<V> {
+public class ResultContainer<V> {
     private String errorMsg = null;
     private V value;
 
-    public ErrorContainer(V defaultValue) {
+    public ResultContainer(V defaultValue) {
         this.value = defaultValue;
     }
 
