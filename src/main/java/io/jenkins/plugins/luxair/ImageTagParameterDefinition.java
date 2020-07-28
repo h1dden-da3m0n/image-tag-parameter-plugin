@@ -124,7 +124,7 @@ public class ImageTagParameterDefinition extends SimpleParameterDefinition {
         }
 
         ResultContainer<List<ImageTag>> imageTags = ImageTagService.getTags(image, registry, filter, user, password, tagOrder);
-        imageTags.getErrorMsg().ifPresent(this::setErrorMsg);
+        setErrorMsg(imageTags.getErrorMsg().orElse(""));
 
         return imageTags.getValue();
     }
