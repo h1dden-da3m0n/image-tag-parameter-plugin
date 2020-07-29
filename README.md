@@ -1,22 +1,22 @@
 # Image Tag Parameter Plugin
 
 <p align="center">
-  <a>
+  <a href="https://github.com/docker/distribution">
     <img alt="Docker Registry" src="img/registry-docker.svg"/>
   </a>
-  <a>
+  <a href="https://github.com/goharbor/harbor">
     <img alt="Harbor Registry" src="img/registry-harbor.svg"/>
   </a>
-  <a>
+  <a href="https://quay.io/">
     <img alt="Quay Registry" src="img/registry-quay.svg"/>
   </a>
-  <a>
+  <a href="https://cloud.google.com/container-registry/">
     <img alt="Google Container Registry Registry" src="img/registry-gcr.svg"/>
   </a>
-  <a>
+  <a href="https://azure.microsoft.com/en-us/services/container-registry/">
     <img alt="Azure Container Registry" src="img/registry-acr.svg"/>
   </a>
-  <a>
+  <a href="https://aws.amazon.com/ecr/">
     <img alt="AWS Elastic Container Registry" src="img/registry-ecr.svg"/>
   </a>
 </p>
