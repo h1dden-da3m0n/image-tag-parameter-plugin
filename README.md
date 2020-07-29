@@ -1,10 +1,16 @@
 # Image Tag Parameter Plugin
-![Logo](img/registry.png)
+
+![Docker](img/registry-docker.svg)
+![Harbor](img/registry-harbor.svg)
+![Quay](img/registry-quay.svg)
+![GCR](img/registry-gcr.svg)
+![ACR](img/registry-acr.svg)
+![ECR](img/registry-ecr.svg)
 
 [Changelog](CHANGELOG.md)
 
 ## Introduction
-This plugin allows you to define (container) image tags as parameter in your builds.  
+This plugin allows you to define (container) image tags as parameter in your builds.
 It uses the Docker **Registry HTTP API V2** to list tags available for an image.
 
 ## Screenshots
@@ -33,7 +39,7 @@ unclassified:
     defaultRegistry: "https://registry-1.docker.io"
     defaultCredentialId: ""
     defaultTagOrdering: DSC_VERSION
-# ... 
+# ...
 ```
 
 Configuring this plugins global config was available via JCasC since the addition of the global config in v1.2,
@@ -48,7 +54,7 @@ pipeline {
   agent any
 
   parameters {
-    imageTag(name: 'DOCKER_IMAGE', description: '', 
+    imageTag(name: 'DOCKER_IMAGE', description: '',
              image: 'jenkins/jenkins', filter: 'lts.*', defaultTag: 'lts-jdk11',
              registry: 'https://registry-1.docker.io', credentialId: '', tagOrder: 'NATURAL')
   }
@@ -70,9 +76,9 @@ pipeline {
 parameters {
   imageTag(name: 'DOCKER_IMAGE', image: 'jenkins/jenkins')
 }
-``` 
+```
 
-### Exposed Environment Variables (and params, since version 1.6) 
+### Exposed Environment Variables (and params, since version 1.6)
 Based on default Jenkins behaviour you can use `params.imageTagParameterName` to access the value of `imageName:imageTag`,
 but since you most of the time only need the image tag by itself the plugin also exports some additional environment variables.
 
@@ -86,12 +92,12 @@ There are currently four options available:
 
 * **NATURAL** or *Natural Ordering* ... this is the default setting and offers the same ordering as in the previous versions
 * **REV_NATURAL** or *Reverse Natural Ordering* ... the reverted version of **NATURAL**
-* **DSC_VERSION** or *Descending Versions* ... This will attempt to parse the gathered queried tags into `hudson.util.VersionNumber` 
+* **DSC_VERSION** or *Descending Versions* ... This will attempt to parse the gathered queried tags into `hudson.util.VersionNumber`
 and order them descending.
 * **ASC_VERSION** or *Ascending Versions* ... just like **DSC_VERSION** only in reverse (aka. ascending sorted)
 
 **NOTE** The Version Ordering should be used with care and represents a convenience functionality, it will NOT work with every images tags or every configuration! \
-The [`hudson.util.VersionNumber`](https://github.com/jenkinsci/lib-version-number/blob/master/src/main/java/hudson/util/VersionNumber.java) 
+The [`hudson.util.VersionNumber`](https://github.com/jenkinsci/lib-version-number/blob/master/src/main/java/hudson/util/VersionNumber.java)
 may try to its best ability to parse a tag to a version, but as ImageTags don't require a format this might not yield an expected result,
 so make sure to use a tag order that fits best for the tags you offer via a given job parameter.
 
