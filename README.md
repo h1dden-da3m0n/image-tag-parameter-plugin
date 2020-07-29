@@ -1,11 +1,25 @@
 # Image Tag Parameter Plugin
 
-![Docker](img/registry-docker.svg)
-![Harbor](img/registry-harbor.svg)
-![Quay](img/registry-quay.svg)
-![GCR](img/registry-gcr.svg)
-![ACR](img/registry-acr.svg)
-![ECR](img/registry-ecr.svg)
+<p align="center">
+  <a>
+    <img alt="Docker Registry" src="img/registry-docker.svg"/>
+  </a>
+  <a>
+    <img alt="Harbor Registry" src="img/registry-harbor.svg"/>
+  </a>
+  <a>
+    <img alt="Quay Registry" src="img/registry-quay.svg"/>
+  </a>
+  <a>
+    <img alt="Google Container Registry Registry" src="img/registry-gcr.svg"/>
+  </a>
+  <a>
+    <img alt="Azure Container Registry" src="img/registry-acr.svg"/>
+  </a>
+  <a>
+    <img alt="AWS Elastic Container Registry" src="img/registry-ecr.svg"/>
+  </a>
+</p>
 
 [Changelog](CHANGELOG.md)
 
